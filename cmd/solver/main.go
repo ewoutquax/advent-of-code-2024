@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-01-historian-hysteria"
+	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-02-red-nosed-reports"
 	"github.com/ewoutquax/advent-of-code-2024/pkg/register"
 )
 
