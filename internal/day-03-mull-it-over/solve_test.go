@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	. "github.com/ewoutquax/advent-of-code-2024/internal/day-03"
+	. "github.com/ewoutquax/advent-of-code-2024/internal/day-03-mull-it-over"
 	"github.com/stretchr/testify/assert"
 )
 

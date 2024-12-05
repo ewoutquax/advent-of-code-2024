@@ -10,6 +10,7 @@ import (
 	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-02-red-nosed-reports"
 	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-03-mull-it-over"
 	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-04-ceres-search"
+	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-05-print-queue"
 	"github.com/ewoutquax/advent-of-code-2024/pkg/register"
 )
 
