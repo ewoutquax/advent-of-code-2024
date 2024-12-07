@@ -12,6 +12,7 @@ import (
 	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-04-ceres-search"
 	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-05-print-queue"
 	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-06-guard-gallivant"
+	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-07-bridge-repair"
 	"github.com/ewoutquax/advent-of-code-2024/pkg/register"
 )
 
