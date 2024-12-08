@@ -4,13 +4,10 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/ewoutquax/advent-of-code-2024/pkg/register"
 	"github.com/ewoutquax/advent-of-code-2024/pkg/utils"
-)
-
-const (
-	Day string = "07"
 )
 
 type Operator uint
@@ -19,10 +16,16 @@ const (
 	OperatorAdd Operator = iota + 1
 	OperatorMultiply
 	OperatorConcat
+
+	Day         string = "07"
+	MAX_THREADS int    = 8
 )
 
 var (
-	MaxOperators int = 2
+	wg                           = sync.WaitGroup{}
+	lockSummedValidEquations     = sync.Mutex{}
+	summedValidEquations     int = 0
+	MaxOperators             int = 2
 )
 
 type Equation struct {
@@ -90,15 +93,34 @@ func resolveNumbers(nrs []int, answer int) []int {
 type Equations []Equation
 
 func SumValidEquations(equations Equations) int {
-	var sum int = 0
+	summedValidEquations = 0
+
+	channel := make(chan Equation)
+	for idx := MAX_THREADS; idx > 0; idx-- {
+		go resolveEquation(channel)
+	}
+	wg.Add(MAX_THREADS)
 
 	for _, equation := range equations {
+		channel <- equation
+	}
+	close(channel)
+
+	wg.Wait()
+
+	return summedValidEquations
+}
+
+func resolveEquation(channel chan Equation) {
+	defer wg.Done()
+
+	for equation := range channel {
 		if equation.IsValid() {
-			sum += equation.Answer
+			lockSummedValidEquations.Lock()
+			summedValidEquations += equation.Answer
+			lockSummedValidEquations.Unlock()
 		}
 	}
-
-	return sum
 }
 
 func ParseInput(lines []string) Equations {

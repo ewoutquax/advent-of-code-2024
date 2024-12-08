@@ -38,14 +38,6 @@ func (g Guard) NextLocation() Location {
 	}
 }
 
-func (l Location) toS() string {
-	return fmt.Sprintf("[%d, %d]", l.X, l.Y)
-}
-
-func (g Guard) toS() string {
-	return g.Location.toS()
-}
-
 func (g Guard) isOnMap(u *Universe) bool {
 	return g.Location.X >= 0 &&
 		g.Location.X <= u.MaxX &&

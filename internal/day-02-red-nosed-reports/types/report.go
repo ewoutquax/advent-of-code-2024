@@ -1,4 +1,4 @@
-package day02rednosedreports_report
+package day02rednosedreports_types
 
 type Report struct {
 	Levels []Level

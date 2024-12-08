@@ -85,8 +85,6 @@ func TestDetectLooping(t *testing.T) {
 
 	universe.Reset()
 	assert.False(t, GuardIsLooping(&universe))
-
-	assert.True(t, false)
 }
 
 func TestCountLoopingBlocks(t *testing.T) {
