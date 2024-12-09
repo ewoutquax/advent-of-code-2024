@@ -14,6 +14,7 @@ import (
 	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-06-guard-gallivant"
 	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-07-bridge-repair"
 	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-08-resonant-collinearity"
+	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-09-disk-fragmenter"
 	"github.com/ewoutquax/advent-of-code-2024/pkg/register"
 )
 
