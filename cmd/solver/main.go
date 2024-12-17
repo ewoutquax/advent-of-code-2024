@@ -20,6 +20,7 @@ import (
 	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-12-garden-groups"
 	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-13-claw-contraption"
 	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-14-restroom-redoubt"
+	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-15-warehouse-woes"
 	"github.com/ewoutquax/advent-of-code-2024/pkg/register"
 )
 
