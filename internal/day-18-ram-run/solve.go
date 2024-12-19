@@ -43,7 +43,7 @@ type Universe struct {
 }
 
 var (
-	visitedPoints map[image.Point]bool
+	visitedPoints map[image.Point]int
 )
 
 func FindFirstBlockingByte(universe Universe, lines []string) string {
@@ -66,7 +66,7 @@ func FindFirstBlockingByte(universe Universe, lines []string) string {
 
 func FindMinSteps(universe Universe) int {
 	var minSteps int = math.MaxInt
-	visitedPoints = make(map[image.Point]bool)
+	visitedPoints = make(map[image.Point]int)
 
 	var paths PathHeap = make(PathHeap, 0)
 	paths = append(paths, Path{
@@ -85,8 +85,8 @@ func FindMinSteps(universe Universe) int {
 		}
 
 		for _, newPoint := range findNewPoints(currPath, universe) {
-			if _, exists := visitedPoints[newPoint]; !exists {
-				visitedPoints[newPoint] = true
+			if prevNrSteps, exists := visitedPoints[newPoint]; !exists && prevNrSteps > currPath.nrSteps+1 {
+				visitedPoints[newPoint] = currPath.nrSteps + 1
 				heap.Push(&paths, Path{
 					nrSteps: currPath.nrSteps + 1,
 					Point:   newPoint,
