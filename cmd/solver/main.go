@@ -23,6 +23,7 @@ import (
 	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-15-warehouse-woes"
 	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-18-ram-run"
 	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-19-linen-layout"
+	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-20-race-condition"
 	"github.com/ewoutquax/advent-of-code-2024/pkg/register"
 )
 
