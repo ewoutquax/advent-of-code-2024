@@ -24,6 +24,7 @@ import (
 	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-18-ram-run"
 	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-19-linen-layout"
 	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-20-race-condition"
+	_ "github.com/ewoutquax/advent-of-code-2024/internal/day-22-monkey-market"
 	"github.com/ewoutquax/advent-of-code-2024/pkg/register"
 )
 
