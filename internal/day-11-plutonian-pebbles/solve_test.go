@@ -2,7 +2,6 @@ package day11plutonianpebbles_test
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
 	. "github.com/ewoutquax/advent-of-code-2024/internal/day-11-plutonian-pebbles"
@@ -12,49 +11,42 @@ import (
 func TestParseInput(t *testing.T) {
 	assert := assert.New(t)
 
-	stones := ParseInput(testInput())
+	rocks := ParseInput(testInput())
 
-	assert.Equal("[]day11plutonianpebbles.Stone", fmt.Sprintf("%s", reflect.TypeOf(stones)))
-
-	assert.Len(stones, 5)
-	assert.Equal(Stone(0), stones[0])
-	assert.Equal(Stone(999), stones[len(stones)-1])
+	assert.Equal("[]day11plutonianpebbles.Rock", fmt.Sprintf("%T", rocks))
+	assert.Len(rocks, 2)
+	assert.Equal(Rock(125), rocks[0])
+	assert.Equal(Rock(17), rocks[len(rocks)-1])
 }
 
-func TestStoneResolve0to1(t *testing.T) {
-	stones := ParseInput(testInput())
+func TestRockNextRocks(t *testing.T) {
+	testCases := map[Rock][]Rock{
+		0:    {1},
+		10:   {1, 0},
+		1024: {10, 24},
+		8000: {80, 0},
+		8:    {16192},
+	}
 
-	assert.Equal(t, []Stone{1}, stones[0].Resolve())
+	for inputRock, expectedOutput := range testCases {
+		actualOutput := inputRock.NextRocks()
+		assert.Equal(t, expectedOutput, actualOutput)
+	}
 }
 
-func TestStoneResolve1to2024(t *testing.T) {
-	stones := ParseInput(testInput())
+func TestCountRocksAfterBlinks(t *testing.T) {
+	testCases := map[int]int{
+		6:  22,
+		25: 55312,
+	}
 
-	assert.Equal(t, []Stone{2024}, stones[1].Resolve())
-}
-
-func TestStoneResolve10To1And0(t *testing.T) {
-	stones := ParseInput(testInput())
-
-	assert.Equal(t, []Stone{1, 0}, stones[2].Resolve())
-}
-
-func TestBlinkOnce(t *testing.T) {
-	stones := ParseInput(testInput())
-
-	assert.Equal(t, 7, NrStonesAfterBlinks(stones, 1))
-}
-
-func TestBlink25Times(t *testing.T) {
-	stones := ParseInput(testInput2())
-
-	assert.Equal(t, 55312, NrStonesAfterBlinks(stones, 25))
+	rocks := ParseInput(testInput())
+	for blinks, expectedCount := range testCases {
+		actualCount := CountRocksAfterBlinks(rocks, blinks)
+		assert.Equal(t, expectedCount, actualCount)
+	}
 }
 
 func testInput() string {
-	return "0 1 10 99 999"
-}
-
-func testInput2() string {
 	return "125 17"
 }

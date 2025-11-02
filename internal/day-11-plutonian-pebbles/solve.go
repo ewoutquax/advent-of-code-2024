@@ -6,97 +6,86 @@ import (
 	"strings"
 
 	"github.com/ewoutquax/advent-of-code-2024/pkg/register"
-	"github.com/ewoutquax/advent-of-code-2024/pkg/utils"
 )
 
 const (
 	Day string = "11"
 )
 
-type CacheKey struct {
-	Stone
-	depth int
+type (
+	Rock int
+)
+
+func (r Rock) NextRocks() []Rock {
+	stringRock := fmt.Sprintf("%d", r)
+	nrDigits := len(strings.Split(stringRock, ""))
+
+	switch true {
+	case r == 0:
+		return []Rock{1}
+	case (nrDigits % 2) == 0:
+		leftRock := stringRock[:nrDigits/2]
+		rightRock := stringRock[nrDigits/2:]
+
+		return []Rock{
+			convAtoRock(leftRock),
+			convAtoRock(rightRock),
+		}
+	default:
+		return []Rock{r * 2024}
+	}
 }
 
-var cache map[CacheKey]int
-
-type Stone int
-
-func (s Stone) Length(depth int) int {
-	if depth == 0 {
+func (r Rock) CountAfterBlinks(blinks int) int {
+	if blinks == 0 {
 		return 1
 	}
 
-	cacheKey := CacheKey{
-		Stone: s,
-		depth: depth,
-	}
-
-	if length, exists := cache[cacheKey]; exists {
-		return length
-	}
-
-	length := 0
-	for _, subStone := range s.Resolve() {
-		length += subStone.Length(depth - 1)
-	}
-	cache[cacheKey] = length
-
-	return length
+	return CountRocksAfterBlinks(r.NextRocks(), blinks-1)
 }
 
-func (s Stone) Resolve() []Stone {
-	strValue := strconv.Itoa(int(s))
-	switch true {
-	case s == 0:
-		return []Stone{1}
-	case len(strValue)%2 == 0:
-		middle := len(strValue) / 2
+func CountRocksAfterBlinks(rocks []Rock, blinks int) int {
+	var sum int = 0
 
-		return []Stone{
-			Stone(utils.ConvStrToI(strValue[:middle])),
-			Stone(utils.ConvStrToI(strValue[middle:])),
-		}
-	default:
-		return []Stone{s * 2024}
+	for _, rock := range rocks {
+		sum += rock.CountAfterBlinks(blinks)
 	}
+
+	return sum
 }
 
-func NrStonesAfterBlinks(stones []Stone, nrBlinks int) int {
-	cache = make(map[CacheKey]int)
+func ParseInput(line string) []Rock {
+	parts := strings.Split(line, " ")
 
-	var count int = 0
-	for _, stone := range stones {
-		count += stone.Length(nrBlinks)
+	var rocks = make([]Rock, 0, len(parts))
+
+	for _, nr := range parts {
+		rocks = append(rocks, convAtoRock(nr))
 	}
 
-	return count
+	return rocks
 }
 
-func ParseInput(line string) []Stone {
-	numbers := strings.Split(line, " ")
-
-	var stones []Stone = make([]Stone, 0, len(numbers))
-
-	for _, nr := range numbers {
-		stones = append(stones, Stone(utils.ConvStrToI(nr)))
+func convAtoRock(s string) Rock {
+	nr, err := strconv.Atoi(s)
+	if err != nil {
+		panic(err)
 	}
-
-	return stones
+	return Rock(nr)
 }
 
 func solvePart1(inputFile string) {
-	line := utils.ReadFileAsLine(inputFile)
-	stones := ParseInput(line)
+	_ = inputFile
 
-	fmt.Printf("Result of day-%s / part-1: %d\n", Day, NrStonesAfterBlinks(stones, 25))
+	rocks := ParseInput("0 7 198844 5687836 58 2478 25475 894")
+	fmt.Printf("Result of day-%s / part-1: %d\n", Day, CountRocksAfterBlinks(rocks, 25))
 }
 
 func solvePart2(inputFile string) {
-	line := utils.ReadFileAsLine(inputFile)
-	stones := ParseInput(line)
+	_ = inputFile
 
-	fmt.Printf("Result of day-%s / part-2: %d\n", Day, NrStonesAfterBlinks(stones, 75))
+	rocks := ParseInput("0 7 198844 5687836 58 2478 25475 894")
+	fmt.Printf("Result of day-%s / part-1: %d\n", Day, CountRocksAfterBlinks(rocks, 75))
 }
 
 func init() {
