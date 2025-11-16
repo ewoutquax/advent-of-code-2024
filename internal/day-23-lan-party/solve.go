@@ -2,157 +2,239 @@ package day23lanparty
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/ewoutquax/advent-of-code-2024/pkg/register"
 	"github.com/ewoutquax/advent-of-code-2024/pkg/utils"
 )
 
+type (
+	Node       string
+	Clique     []Node
+	Edge       [2]Node
+	Neighbours map[Node][]Node
+)
+
 const (
 	Day string = "23"
 )
 
-type (
-	ComputerName string
-	Triangle     [3]ComputerName
-	Computer     struct {
-		Name        ComputerName
-		Connections []*Computer
-	}
-	LAN map[ComputerName]*Computer
-)
-
-func (t Triangle) ContainPossibleComputer() bool {
-	for _, name := range t {
-		if string(name[0]) == "t" {
+func (c Clique) containsComputerT() bool {
+	for _, node := range c {
+		if string(node[0]) == "t" {
 			return true
 		}
 	}
+
 	return false
 }
 
-func FilterPossibleTriangles(triangles []Triangle) []Triangle {
-	var possibleTriangles []Triangle = make([]Triangle, 0, len(triangles))
+func (c Clique) deepClone() Clique {
+	var out Clique = make(Clique, len(c))
 
-	for _, triangle := range triangles {
-		if triangle.ContainPossibleComputer() {
-			possibleTriangles = append(possibleTriangles, triangle)
-		}
-	}
+	copy(out, c)
 
-	return possibleTriangles
+	return out
 }
 
-func FindSetsOf3Computers(lan LAN) []Triangle {
-	allNames := make([]ComputerName, 0, len(lan))
-	for name := range lan {
-		allNames = append(allNames, name)
-	}
-	sort.Slice(allNames, func(i, j int) bool { return allNames[i] < allNames[j] })
-	fmt.Printf("allNames (after sort): %v\n", allNames)
+func (c Clique) toS() string {
+	var names = make([]string, len(c))
 
-	triangles := make([]Triangle, 0)
-	for _, name := range allNames {
-		for _, node := range lan[name].Connections {
-			if name < node.Name {
-				common := intersect(lan[name].Connections, lan[node.Name].Connections)
-				for _, thirdName := range common {
-					if node.Name < thirdName {
-						newTriangle := Triangle{name, node.Name, thirdName}
-						triangles = append(triangles, newTriangle)
-					}
+	for idx, name := range c {
+		names[idx] = string(name)
+	}
+
+	return strings.Join(names, ",")
+}
+
+func CountApplicableTriangles(nodes []Node, edges []Edge) int {
+	var count int = 0
+	var uniqueApplicableCliques = make(map[string]struct{})
+
+	cliques := FindCliques(nodes, edges)
+	for _, clique := range cliques {
+		sizedCliques := SplitLargeClique(clique)
+		for _, sizedClique := range sizedCliques {
+			if len(sizedClique) == 3 && sizedClique.containsComputerT() {
+				if _, ok := uniqueApplicableCliques[sizedClique.toS()]; !ok {
+					uniqueApplicableCliques[sizedClique.toS()] = struct{}{}
+					count++
 				}
 			}
 		}
 	}
 
-	return triangles
+	return count
 }
 
-func intersect(leftConnections, rightConnections []*Computer) []ComputerName {
-	mappedNames := make(map[ComputerName]int, 0)
+func FindPassword(nodes []Node, edges []Edge) string {
+	cliques := FindCliques(nodes, edges)
 
-	for _, computer := range append(leftConnections, rightConnections...) {
-		if count, exists := mappedNames[computer.Name]; exists {
-			mappedNames[computer.Name] = count + 1
-		} else {
-			mappedNames[computer.Name] = 1
+	var maxLength int = 0
+	for _, c := range cliques {
+		maxLength = max(maxLength, len(c))
+	}
+
+	var largestClique Clique
+	for _, c := range cliques {
+		if len(c) == maxLength {
+			largestClique = c
 		}
 	}
 
-	out := make([]ComputerName, 0, len(mappedNames))
-	for name, count := range mappedNames {
-		if count > 1 {
-			out = append(out, name)
+	slices.Sort(largestClique)
+
+	return largestClique.toS()
+}
+
+func FindCliques(nodes []Node, edges []Edge) []Clique {
+	neighbours := BuildIndexedNeighbours(nodes, edges)
+
+	return neighbours.BornKerbosch([]Node{}, nodes, []Node{})
+}
+
+func SplitLargeClique(largeClique Clique) []Clique {
+	var combinations []Clique = make([]Clique, 0)
+	n := len(largeClique)
+	total := 1<<n - 1
+
+	for mask := 1; mask <= total; mask++ {
+		var subClique Clique = Clique{}
+		for i := range n {
+			if (mask>>i)&1 == 1 {
+				subClique = append(subClique, largeClique[i])
+			}
 		}
+		combinations = append(combinations, subClique)
+	}
+
+	return combinations
+}
+
+/**
+* R => Current clique
+* P => All vertices, optionally the neighbours of the current node
+* X => Excluded vertices, to prevent duplicates
+ */
+func (n Neighbours) BornKerbosch(R Clique, P, X []Node) []Clique {
+	// fmt.Println("BornKerbosch")
+	// fmt.Printf("R: %v\nP: %v\nX: %v\n", R, P, X)
+
+	if len(P) == 0 && len(X) == 0 {
+		// fmt.Printf("BornKerbosch: returning clique: %v\n", R)
+		return []Clique{R}
+	}
+
+	foundCliques := make([]Clique, 0)
+	localP := deepClone(P)
+	for len(localP) > 0 {
+		currentNode := localP[0]
+
+		subR := append(R, currentNode)
+		subP := Intersection(localP, n[currentNode])
+		subX := Intersection(X, n[currentNode])
+
+		subCliques := n.BornKerbosch(subR, subP, subX)
+		foundCliques = append(foundCliques, deepCloneCliques(subCliques)...)
+
+		localP = localP[1:]
+		X = append(X, currentNode)
+	}
+
+	return foundCliques
+}
+
+func Intersection(lefts, right []Node) []Node {
+	var intersected []Node = make([]Node, 0, min(len(lefts), len(right)))
+
+	for _, left := range lefts {
+		if slices.Contains(right, left) {
+			intersected = append(intersected, left)
+		}
+	}
+
+	return intersected
+}
+
+func BuildIndexedNeighbours(nodes []Node, edges []Edge) Neighbours {
+	var indexedNodes Neighbours = make(Neighbours, len(nodes))
+
+	for _, currentNode := range nodes {
+		neighbours := make([]Node, 0, len(nodes))
+
+		for _, nodes := range edges {
+			if currentNode == nodes[0] {
+				neighbours = append(neighbours, nodes[1])
+			}
+			if currentNode == nodes[1] {
+				neighbours = append(neighbours, nodes[0])
+			}
+		}
+
+		indexedNodes[currentNode] = neighbours
+	}
+
+	return indexedNodes
+}
+
+func ParseInput(lines []string) ([]Node, []Edge) {
+	var indexedNodes map[Node]struct{} = make(map[Node]struct{}, len(lines)*2)
+	var edges []Edge = make([]Edge, 0, len(lines))
+
+	for _, line := range lines {
+		parts := strings.Split(line, "-")
+
+		fromNode := Node(parts[0])
+		toNode := Node(parts[1])
+
+		indexedNodes[fromNode] = struct{}{}
+		indexedNodes[toNode] = struct{}{}
+
+		edges = append(edges, Edge{fromNode, toNode})
+	}
+
+	var nodes []Node = make([]Node, 0, len(indexedNodes))
+	for node := range indexedNodes {
+		nodes = append(nodes, node)
+	}
+
+	return nodes, edges
+}
+
+func deepClone(P []Node) []Node {
+	var out []Node = make([]Node, len(P))
+
+	copy(out, P)
+
+	return out
+}
+
+func deepCloneCliques(cliques []Clique) []Clique {
+	out := make([]Clique, len(cliques))
+
+	for idx, c := range cliques {
+		out[idx] = c.deepClone()
 	}
 
 	return out
 }
 
-func ParseInput(lines []string) LAN {
-	var computers = make(LAN, len(lines))
-
-	// First, build a list with all computers by name
-	for _, line := range lines {
-		parts := strings.Split(line, "-")
-
-		computerName1 := ComputerName(parts[0])
-		computerName2 := ComputerName(parts[1])
-
-		computers[computerName1] = &Computer{
-			Name:        computerName1,
-			Connections: make([]*Computer, 0, 2),
-		}
-		computers[computerName2] = &Computer{
-			Name:        computerName2,
-			Connections: make([]*Computer, 0, 2),
-		}
-	}
-
-	// Link the computers, based on the input
-	for _, line := range lines {
-		parts := strings.Split(line, "-")
-
-		computerName1 := ComputerName(parts[0])
-		computerName2 := ComputerName(parts[1])
-
-		computers[computerName1].Connections = append(computers[computerName1].Connections, computers[computerName2])
-		computers[computerName2].Connections = append(computers[computerName2].Connections, computers[computerName1])
-	}
-
-	// Testing: print the parsed data
-	for _, c := range computers {
-		conns := make([]string, 0, 10)
-		for _, conn := range c.Connections {
-			conns = append(
-				conns,
-				string(conn.Name),
-			)
-		}
-		fmt.Printf("Computer '%s' is connected to: [%s]\n", c.Name, strings.Join(conns, ", "))
-	}
-
-	return computers
-}
-
 func solvePart1(inputFile string) {
-	lines := utils.ReadFileAsLines(inputFile)
-	lan := ParseInput(lines)
-	triangles := FindSetsOf3Computers(lan)
+	links := utils.ReadFileAsLines(inputFile)
+	nodes, edges := ParseInput(links)
 
-	fmt.Printf("Result of day-%s / part-1: %d\n", Day, len(FilterPossibleTriangles(triangles)))
+	fmt.Printf("Result of day-%s / part-1: %d\n", Day, CountApplicableTriangles(nodes, edges))
 }
 
 func solvePart2(inputFile string) {
-	_ = inputFile
+	links := utils.ReadFileAsLines(inputFile)
+	nodes, edges := ParseInput(links)
 
-	var count int = 0
-	fmt.Printf("Result of day-%s / part-2: %d\n", Day, count)
+	fmt.Printf("Result of day-%s / part-2: %s\n", Day, FindPassword(nodes, edges))
 }
 
 func init() {
 	register.Day(Day+"a", solvePart1)
-	// register.Day(Day+"b", solvePart2)
+	register.Day(Day+"b", solvePart2)
 }

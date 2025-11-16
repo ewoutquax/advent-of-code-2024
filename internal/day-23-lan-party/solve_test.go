@@ -1,7 +1,6 @@
 package day23lanparty_test
 
 import (
-	"fmt"
 	"testing"
 
 	. "github.com/ewoutquax/advent-of-code-2024/internal/day-23-lan-party"
@@ -9,34 +8,75 @@ import (
 )
 
 func TestParseInput(t *testing.T) {
+	nodes, edges := ParseInput(testInputSmall())
+
 	assert := assert.New(t)
+	assert.Len(nodes, 4)
+	assert.Len(edges, 4)
 
-	lan := ParseInput(testInput())
-
-	assert.IsType(LAN{}, lan)
-	assert.Len(lan, 16)
-
-	var computerKh *Computer = lan["kh"]
-
-	fmt.Printf("computerKc: %v\n", computerKh)
-	assert.Len(computerKh.Connections, 4)
-	assert.Equal(ComputerName("tc"), computerKh.Connections[0].Name)
+	assert.Contains(nodes, Node("a"))
+	assert.Contains(nodes, Node("b"))
+	assert.Contains(nodes, Node("c"))
+	assert.Contains(nodes, Node("d"))
+	assert.Contains(edges, Edge{"a", "b"})
+	assert.Contains(edges, Edge{"a", "c"})
+	assert.Contains(edges, Edge{"b", "c"})
+	assert.Contains(edges, Edge{"b", "d"})
 }
 
-func TestFindSetsOf3Computers(t *testing.T) {
-	lan := ParseInput(testInput())
-	triangles := FindSetsOf3Computers(lan)
+func TestBuildIndexedNeighbours(t *testing.T) {
+	nodes, edges := ParseInput(testInputSmall())
 
-	assert.Len(t, triangles, 12)
+	indexedNeighours := BuildIndexedNeighbours(nodes, edges)
+
+	assert := assert.New(t)
+	assert.Len(indexedNeighours, 4)
+	assert.Equal(indexedNeighours["a"], []Node{"b", "c"})
+	assert.Equal(indexedNeighours["b"], []Node{"a", "c", "d"})
+	assert.Equal(indexedNeighours["c"], []Node{"a", "b"})
+	assert.Equal(indexedNeighours["d"], []Node{"b"})
 }
 
-func TestFilterPossibleTriangles(t *testing.T) {
-	lan := ParseInput(testInput())
-	triangles := FindSetsOf3Computers(lan)
+func TestFindCliquesSmall(t *testing.T) {
+	_, edges := ParseInput(testInputSmall())
+	nodes := []Node{"a", "b", "c", "d"} // Declare nodes again, to determine order
 
-	possibleTriangles := FilterPossibleTriangles(triangles)
-	assert.Len(t, possibleTriangles, 7)
+	cliques := FindCliques(nodes, edges)
 
+	assert := assert.New(t)
+	assert.Len(cliques, 2)
+	assert.Contains(cliques, Clique{"a", "b", "c"})
+	assert.Contains(cliques, Clique{"b", "d"})
+}
+
+func TestCountApplicableTriangles(t *testing.T) {
+	nodes, edges := ParseInput(testInput())
+
+	count := CountApplicableTriangles(nodes, edges)
+
+	assert.Equal(t, 7, count)
+	assert.True(t, false)
+}
+
+func TestSplitLargeCliques(t *testing.T) {
+	largeClique := Clique{"co", "de", "ka", "ta"}
+
+	splittedCliques := SplitLargeClique(largeClique)
+
+	assert := assert.New(t)
+	assert.Len(splittedCliques, 1+4+6+4)
+	assert.Contains(splittedCliques, Clique{"co", "de", "ta"})
+	assert.Contains(splittedCliques, Clique{"co", "ka", "ta"})
+	assert.Contains(splittedCliques, Clique{"de", "ka", "ta"})
+}
+
+func testInputSmall() []string {
+	return []string{
+		"a-b",
+		"a-c",
+		"b-c",
+		"b-d",
+	}
 }
 
 func testInput() []string {
