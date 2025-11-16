@@ -2,7 +2,7 @@ module github.com/ewoutquax/advent-of-code-2024
 
 go 1.24.0
 
-require github.com/stretchr/testify v1.9.0
+require github.com/stretchr/testify v1.11.1
 
 require (
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
